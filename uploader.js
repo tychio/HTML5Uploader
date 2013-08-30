@@ -18,6 +18,7 @@ window.HTML5.Uploader = (function ($, undefined) {
             error_type:             'File Type is images file only!',
             error_size:             'File Size too large!',
             error_compute:          'Unable to compute',
+            loading:                'waiting for upload is complete...',
             selector_input:         '#html5-uploader',//input[type=file] selector
             is_multiple:            false,//allow to upload multiple files
             has_preview:            _setPreview,//preview image,need function
@@ -26,9 +27,8 @@ window.HTML5.Uploader = (function ($, undefined) {
         api = {//interface
             set: setConfig,
             init: initializeUploader,
-            listen: listenChange,
             upload: uploadImages,
-            error: alertError
+            tip: alertMsg
         },
         lock = false;//ajax lock
         /**
@@ -63,26 +63,16 @@ window.HTML5.Uploader = (function ($, undefined) {
             if (_isFunction(conf.has_preview)) {
                 conf.has_preview();
             }
+            //multiple files upload
             if (conf.is_multiple) {
                 $(selector_input).attr('multiple', 'multiple');
             }
-            return api;
-        }
-        /**
-         * listen into the file input for change
-         * @param p_func [function] run the function on fire
-         * @return api
-         * return void,if the file input value become empty.
-         * p_fun running before setting preview images.
-        **/
-        function listenChange (p_func) {
+            // prepare uploading on input change
             $(conf.selector_input).unbind().change(function (p_event) {
                 if (!$(this).val()) {// to prevent it was fired at initialize
-                    return;
+                    return api;
                 }
-                if (_isFunction(p_func)) {
-                    p_func.call(this);
-                }
+                //show the image
                 if (_isFunction(conf.has_preview) 
                     && window.FileReader !== undefined) {
                     // read selected file as DataURL
@@ -90,7 +80,7 @@ window.HTML5.Uploader = (function ($, undefined) {
                     var _file = $(this)[0].files[0];
                     _reader.readAsDataURL(_file);
                     _reader.onload = function (_p_e) {//loaded file
-                        conf.has_preview(_p_e.target.result);
+                        conf.has_preview(_p_e.target);
                     };
                 }
             });
@@ -109,7 +99,7 @@ window.HTML5.Uploader = (function ($, undefined) {
                 return api;
             }
             if (window.FormData === undefined) {
-                alertError('Sorry, your browser don\'t support this function.' );
+                alertMsg('Sorry, your browser don\'t support this function.' );
                 return api;
             }
             lock = true;
@@ -127,20 +117,26 @@ window.HTML5.Uploader = (function ($, undefined) {
             return api;
         }
         /*
-        * tip error information
-        * @param p_error_str error information
+        * alert message
+        * @param p_msg message
+        * @param p_error using red color, if message is error message.
         * @return api
-        * it's only used to tip error because of red color and 'FAIL' string.
         */
-        //TODO selectable style and string for other information
-        function alertError (p_error_str) {
-            if (p_error_str === undefined) {
-                $('.offer-logo-alert', '#update_offer_logo').empty();
+        function alertMsg (p_msg, p_error) {
+            var _alert = $(".alert");
+            if (p_msg === undefined) {
+                _alert.fadeOut(200).empty();
+                $('#html5-uploader').val('');
             } else {
-                $('.offer-logo-alert', '#update_offer_logo').html('<div class="alert alert-error fade in"><a class="close" data-dismiss="alert">&times;</a><strong>FAIL: </strong> ' + 
-                    p_error_str + '</div>');
+                if (p_error) {
+                    _alert.addClass('alert-warning')
+                        .removeClass('alert-success');
+                } else {
+                    _alert.removeClass('alert-warning')
+                        .addClass('alert-success');
+                }
+                _alert.fadeIn(200).html(p_msg);
             }
-            $('#html5-uploader').val('');
             return api;
         }
         //to send ajax request.
@@ -177,13 +173,13 @@ window.HTML5.Uploader = (function ($, undefined) {
         function _checkFiles (p_file) {
             //checking type and size
             if (!conf.accept_type.test(p_file.type)) {
-                alertError(conf.error_type);
+                alertMsg(conf.error_type, true);
                 return false;
             } if (conf.max_size < p_file.size) {
-                alertError(conf.error_size);
+                alertMsg(conf.error_size, true);
                 return false;
             } else {
-                alertError();
+                alertMsg(conf.loading);
                 return true;
             }
         }
@@ -211,7 +207,7 @@ window.HTML5.Uploader = (function ($, undefined) {
                 var _completedPrecent = Math.round(_loaded * 100 / _total);
                 conf.has_progress(_completedPrecent);
             } else {
-                alertError(conf.error_compute);
+                alertMsg(conf.error_compute, true);
             }
             
         }
