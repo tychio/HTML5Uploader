@@ -1,21 +1,27 @@
 <?php
-    // print_r($_FILES["images"]);
-    for ($i = 0; $i < count($_FILES["images"]["error"]); $i++) { 
-        echo "No.".$i;
-        if ($_FILES["images"]["error"][$i] > 0) {
-            echo "<p>Error: " . $_FILES["images"]["error"][$i] . "<p/>";
+    header('Content-type: text/json');
+    // print_r($_FILES["upload"]);
+    $rtn = array(
+        "code" => 0,
+        "data" => ''
+    );
+    if ($_FILES["upload"]["error"] > 0) {
+        $rtn["code"] = -1;
+    } else {
+        $rtn["data"] = array(
+            "name" => $_FILES["upload"]["name"],
+            "type" => $_FILES["upload"]["type"],
+            "size" => $_FILES["upload"]["size"],
+            "path" => ""
+        );
+        if (file_exists("img/".$rtn["data"]["name"])) {
+            $rtn["code"] = 1;
         } else {
-            echo "<p>Upload: " . $_FILES["images"]["name"][$i] . "<p/>";
-            echo "<p>Type: " . $_FILES["images"]["type"][$i] . "<p/>";
-            echo "<p>Size: " . ($_FILES["images"]["size"][$i] / 1024) . " Kb<p/>";
-            if (file_exists("img/" . $_FILES["images"]["name"][$i])) {
-                echo $_FILES["images"]["name"][$i] . " already exists. ";
-            } else {
-                move_uploaded_file($_FILES["images"]["tmp_name"][$i],
-                    "img/" . $_FILES["images"]["name"][$i]);
-                echo "Stored in: " . "img/" . $_FILES["images"]["name"][$i];
-            }
-            echo "<hr/>";
+            move_uploaded_file($_FILES["upload"]["tmp_name"],
+                "img/".$_FILES["upload"]["name"]);
+            $rtn["code"] = 0;
+            $rtn["data"]["path"] = "img/".$rtn["data"]["name"];
         }
     }
+    echo json_encode($rtn);
 ?>
