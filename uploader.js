@@ -10,7 +10,7 @@ window.HTML5.Uploader = (function ($, undefined) {
     "use strict";
     return function () {
         var conf = {
-            max_size:               0.5*1024*1024,//0.5MB,limted size
+            max_size:               2*1024*1024,//2MB,limted size
             accept_type:            /image\/\w+/,//accepted type
             images_name:            'upload',//file parameter name in ajax request
             // /^(image\/bmp|image\/gif|image\/jpeg|image\/png|image\/tiff)$/i,//images
@@ -29,8 +29,7 @@ window.HTML5.Uploader = (function ($, undefined) {
             init: initializeUploader,
             upload: uploadImages,
             tip: alertMsg
-        },
-        lock = false;//ajax lock
+        };
         /**
          * setting configuration data.
          * @param p_conf [number/string/object]configuration data.
@@ -65,7 +64,7 @@ window.HTML5.Uploader = (function ($, undefined) {
             }
             //multiple files upload
             if (conf.is_multiple) {
-                $(selector_input).attr('multiple', 'multiple');
+                $(conf.selector_input).attr('multiple', 'multiple');
             }
             // prepare uploading on input change
             $(conf.selector_input).unbind().change(function (p_event) {
@@ -76,12 +75,17 @@ window.HTML5.Uploader = (function ($, undefined) {
                 if (_isFunction(conf.has_preview) 
                     && window.FileReader !== undefined) {
                     // read selected file as DataURL
-                    var _reader = new FileReader();
-                    var _file = $(this)[0].files[0];
-                    _reader.readAsDataURL(_file);
-                    _reader.onload = function (_p_e) {//loaded file
-                        conf.has_preview(_p_e.target);
-                    };
+                    var _reader = [];
+                    var _file = $(this)[0].files;
+                    conf.has_preview();
+                    for (var i = 0; i < _file.length; i++) {
+                        _reader[i] = new FileReader();
+                        _reader[i].readAsDataURL(_file[i]);
+                        _reader[i].index = i;
+                        _reader[i].onload = function (_p_e) {//loaded file
+                            conf.has_preview(_p_e.target, this.index);
+                        };
+                    }
                 }
             });
             return api;
@@ -95,24 +99,13 @@ window.HTML5.Uploader = (function ($, undefined) {
          * building form data and submit it by xml http request.
         **/
         function uploadImages (p_url, p_callback, p_param) {
-            if (lock) {
-                return api;
-            }
             if (window.FormData === undefined) {
                 alertMsg('Sorry, your browser don\'t support this function.' );
                 return api;
             }
-            lock = true;
-            var _form = new FormData();
-            var _file = $(conf.selector_input)[0].files[0];
-            _form.append(conf.images_name, _file);
-            if (p_param !== undefined) {
-                $.each(p_param, function (p_k, p_v) {
-                    _form.append(p_k, p_v);
-                });
-            }
-            if (_checkFiles(_file)) {//passed checking
-                _sendAjax(p_url, _form, p_callback);
+            var _file = $(conf.selector_input)[0].files;
+            for (var i = 0; i < _file.length; i++) {
+                _build(_file[i], i, p_url, p_callback, p_param);
             }
             return api;
         }
@@ -139,15 +132,41 @@ window.HTML5.Uploader = (function ($, undefined) {
             }
             return api;
         }
+        function _build (p_file, p_index, p_url, p_cb, p_param) {
+            var _form = new FormData();
+            _form.append(conf.images_name, p_file);
+            if (p_param !== undefined) {
+                $.each(p_param, function (p_k, p_v) {
+                    _form.append(p_k, p_v);
+                });
+            }
+            if (_checkFiles(p_file)) {//passed checking
+                _sendAjax(p_index, p_url, _form, p_cb);
+            }
+        }
         //to send ajax request.
-        function _sendAjax (p_url, p_form, p_func) {
+        function _sendAjax (p_index, p_url, p_form, p_func) {
             if (typeof p_func === 'function') {//event handle object
                 p_func = {
                     callback: p_func
                 };
             }
+            if (conf.has_progress) {//show progress bar
+                conf.has_progress(0);
+            }
             var _xhr = new XMLHttpRequest();  
-            _xhr.upload.addEventListener('progress', _uploadProgress, false);
+            _xhr.upload.addEventListener('progress', function (p_event) {
+                //loop in uploading
+                if (p_event.lengthComputable) {
+                    var _loaded = p_event.loaded;
+                    var _total = p_event.total;
+                    var _completedPrecent = Math.round(_loaded * 100 / _total);
+                    conf.has_progress(_completedPrecent, p_index);
+                } else {
+                    alertMsg(conf.error_compute, true);
+                }
+                
+            }, false);
             $.each(p_func, function (p_event, p_handle) {//listener other event
                 if (p_event !== 'callback') {
                     _xhr.addEventListener(p_event, p_handle, false);
@@ -155,11 +174,7 @@ window.HTML5.Uploader = (function ($, undefined) {
             });
             _xhr.open('POST', p_url);
             _xhr.send(p_form);
-            if (conf.has_progress) {//show progress bar
-                conf.has_progress(0);
-            }
             _xhr.onreadystatechange = function() {//callback
-                lock = false;
                 if (_xhr.readyState == 4 && _xhr.status == 200) {
                     try {
                         p_func.callback(JSON.parse(_xhr.responseText));
@@ -167,7 +182,7 @@ window.HTML5.Uploader = (function ($, undefined) {
                         p_func.callback(_xhr.responseText);
                     }
                 }
-            }
+            };
         }
         // checking files that type and size
         function _checkFiles (p_file) {
@@ -198,18 +213,6 @@ window.HTML5.Uploader = (function ($, undefined) {
         // setting preview images
         function _setPreview () {
             //without preview image
-        }
-        // get loaded and total to compute the progress, and setting width of progress bar.
-        function _uploadProgress (p_event) {//loop in uploading
-            if (p_event.lengthComputable) {
-                var _loaded = p_event.loaded;
-                var _total = p_event.total;
-                var _completedPrecent = Math.round(_loaded * 100 / _total);
-                conf.has_progress(_completedPrecent);
-            } else {
-                alertMsg(conf.error_compute, true);
-            }
-            
         }
         // return true if it's function
         function _isFunction (p_func) {

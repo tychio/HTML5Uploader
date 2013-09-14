@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Uploader Demo</title>
+    <style type="text/css">
+        section div {
+            position: relative;
+            float: left;
+            width: 200px;
+            height: 200px;
+            margin: 10px;
+        }
+        section div img {
+            position: relative;
+            z-index: 10;
+            width: 200px;
+            height: 200px;
+        }
+        section div .upload_progress {
+            position: absolute;
+            z-index: 20;
+            bottom: 0;
+            left: 0;
+            width: 200px;
+            height: 0%;
+            padding: 0;
+            margin: 0;
+            background: white;
+            opacity: 0.5;
+            line-height: 200px;
+            font-size: 24px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <form>
+        <fieldset>
+            <legend>Upload Images</legend>
+            <section>
+                <input type="file" id="html5-uploader" name="uploadhtml5-uploader">
+                <button type="submit" id="upload_submit">Upload</button>
+            </section>
+            <section class="alert"></section>
+            <section id="upload_preview"></section>
+        </fieldset>
+    </form>
+    <script type="text/javascript" src="jquery.min.js"></script>
+    <script type="text/javascript" src="uploader.js"></script>
+    <script type="text/javascript">
+        var up = window.HTML5.Uploader();
+        up.set({
+            is_multiple: true,
+            has_progress: function (p_height, p_index) {
+                console.log(p_index + ':' + p_height);
+                var _proCls = 'upload_progress';
+                if (p_height < 0) {
+                    $('.' + _proCls).detach();
+                } else {
+                    var _progress = $('<div>', {
+                        class: _proCls
+                    });
+                    var _preview = $('#preview_' + p_index);
+                    if (_preview.find('.' + _proCls).length <= 0) {
+                        _preview.append(_progress);
+                    }
+                    _progress.css('height', p_height + '%');
+                    if (p_height === 100) {
+                        _progress.html('completed');
+                    }
+                }
+            },
+            has_preview: function (p_target, p_index) {
+                var _preview = $('#upload_preview');
+                if (typeof p_target === 'undefined') {
+                    _preview.empty();
+                } else {
+                    var _img = $('<img>').attr({
+                        'src': p_target.result
+                    });
+                    var _wrap = $('<div>').attr({
+                        'class': 'upload_wrap',
+                        'id': 'preview_' + p_index
+                    }).hide().html(_img);
+                    _preview.append(_wrap);
+                    _wrap.fadeIn(500);
+                }
+            }
+        }).init();
+        $('#upload_submit').click(function (p_event) {
+            p_event.preventDefault();
+            event.returnValue = false;
+            up.upload('uploader.php', function (p_data) {
+
+            });
+            return false;
+        });
+    </script>
+</body>
+</html>
