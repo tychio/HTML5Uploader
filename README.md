@@ -16,7 +16,7 @@ The API is very simple and Only a few.You need `init` to build the uploader and 
         });
     });
 
-All right,I suggest that `set` is necessary.Because I think the default options aren't to your taste.Furthermore,There is two attributes are type of function for progress and preview in options.
+All right,I suggest that `set` is necessary.Because I think the default options aren't to your taste.
 
     uploader.set({
         max_size:               2*1024*1024,//2MB,limted size
@@ -32,7 +32,9 @@ All right,I suggest that `set` is necessary.Because I think the default options 
         has_progress:           _setProgress//progress bar，need function
     });
 
-Your could change `images_name` and `selector_input`.They are bound up with your HTML.And the `has_preview` and the `has_progress` are two special functions.The uploader isn't only them to show,but also them to clear it of their products in the main parameter is undefined.
+Your should change value of `images_name` and `selector_input`.They are bound up with your HTML.
+
+Furthermore,There is two attributes are type of function for progress and preview in options.They are two special functions.The uploader isn't only them to show,but also them to clear it of their products in the main parameter is undefined.
 
     uploader.set({
         has_preview: function (p_target) {
