@@ -173,7 +173,7 @@ window.HTML5.Uploader = (function ($, undefined) {
             }, false);
             $.each(p_func, function (p_event, p_handle) {//listener other event
                 if (p_event !== 'callback') {
-                    _xhr.addEventListener(p_event, p_handle, false);
+                    _xhr.upload.addEventListener(p_event, p_handle, false);
                 }
             });
             _xhr.open('POST', p_url);
