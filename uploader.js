@@ -1,6 +1,6 @@
 /**
  * HTML5 Images Uploader
- * AUTHER: Zhengzheng ZHANG[tychio@yeahmobi.com]
+ * AUTHER: Tychio [code@tychio.net]
  * DATE: 2013/08/20
  * UPDATE: 2013/08/22
  * SUPPORT: IE10+/Chrome7+/Firefox4+/Opera12+/Safari6+
