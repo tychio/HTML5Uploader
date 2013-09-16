@@ -52,21 +52,17 @@
         up.set({
             is_multiple: true,
             has_progress: function (p_height, p_index) {
-                console.log(p_index + ':' + p_height);
                 var _proCls = 'upload_progress';
                 if (p_height < 0) {
                     $('.' + _proCls).detach();
                 } else {
-                    var _progress = $('<div>', {
-                        class: _proCls
-                    });
                     var _preview = $('#preview_' + p_index);
-                    if (_preview.find('.' + _proCls).length <= 0) {
-                        _preview.append(_progress);
-                    }
-                    _progress.css('height', p_height + '%');
-                    if (p_height === 100) {
+                    var _progress = _preview.find('.' + _proCls);
+                    _progress.height(p_height*2);
+                    if (p_height > 100) {
                         _progress.html('completed');
+                    } else {
+                        _progress.html(p_height + '%');
                     }
                 }
             },
@@ -81,7 +77,9 @@
                     var _wrap = $('<div>').attr({
                         'class': 'upload_wrap',
                         'id': 'preview_' + p_index
-                    }).hide().html(_img);
+                    }).hide().html(_img).append($('<div>', {
+                        class: 'upload_progress'
+                    }));
                     _preview.append(_wrap);
                     _wrap.fadeIn(500);
                 }

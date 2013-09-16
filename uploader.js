@@ -104,9 +104,7 @@ window.HTML5.Uploader = (function ($, undefined) {
                 return api;
             }
             var _file = $(conf.selector_input)[0].files;
-            for (var i = 0; i < _file.length; i++) {
-                _build(_file[i], i, p_url, p_callback, p_param);
-            }
+            _build(_file, 0, p_url, p_callback, p_param);
             return api;
         }
         /*
@@ -134,23 +132,29 @@ window.HTML5.Uploader = (function ($, undefined) {
         }
         function _build (p_file, p_index, p_url, p_cb, p_param) {
             var _form = new FormData();
-            _form.append(conf.images_name, p_file);
+            _form.append(conf.images_name, p_file[p_index]);
             if (p_param !== undefined) {
                 $.each(p_param, function (p_k, p_v) {
                     _form.append(p_k, p_v);
                 });
             }
-            if (_checkFiles(p_file)) {//passed checking
+            if (_checkFiles(p_file[p_index])) {//passed checking
+                if (typeof p_cb === 'function') {//event handle object
+                    p_cb = {
+                        callback: p_cb
+                    };
+                }
+                p_cb['loadend'] = function () {
+                    conf.has_progress(101, p_index);
+                    _build(p_file, p_index + 1, p_url, p_cb, p_param);
+                };
                 _sendAjax(p_index, p_url, _form, p_cb);
+            } else {
+                _build(p_file, p_index + 1, p_url, p_cb, p_param);
             }
         }
         //to send ajax request.
         function _sendAjax (p_index, p_url, p_form, p_func) {
-            if (typeof p_func === 'function') {//event handle object
-                p_func = {
-                    callback: p_func
-                };
-            }
             if (conf.has_progress) {//show progress bar
                 conf.has_progress(0);
             }
