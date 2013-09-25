@@ -6,7 +6,7 @@
  * SUPPORT: IE10+/Chrome7+/Firefox4+/Opera12+/Safari6+
  **/
 ;window.HTML5 = window.HTML5 || {};
-window.HTML5.Uploader = (function ($, undefined) {
+window.HTML5.Uploader = (function (win, undefined) {
     "use strict";
     return function () {
         var conf = {
@@ -19,7 +19,7 @@ window.HTML5.Uploader = (function ($, undefined) {
             error_size:             'File Size too large!',
             error_compute:          'Unable to compute',
             loading:                'waiting for upload is complete...',
-            selector_input:         '#html5-uploader',//input[type=file] selector
+            input_id:               'html5-uploader',//input[type=file] selector
             is_multiple:            false,//allow to upload multiple files
             has_preview:            _setPreview,//preview image,need function
             has_progress:           _setProgress//progress bar，need function
@@ -34,7 +34,7 @@ window.HTML5.Uploader = (function ($, undefined) {
          * setting configuration data.
          * @param p_conf [number/string/object]configuration data.
          * if number is the parameter of type then instead of max_size.
-         * if string is the parameter of type then instead of selector_input.
+         * if string is the parameter of type then instead of input_id.
          * if object is the parameter of type then to extend globle variable 'conf'.
          * @return api
         **/
@@ -42,9 +42,13 @@ window.HTML5.Uploader = (function ($, undefined) {
             if (typeof p_conf === 'number') {//size
                 conf.max_size = p_conf;
             } else if (typeof p_conf === 'string') {//input selector
-                conf.selector_input = p_conf;
+                conf.input_id = p_conf;
             } else if (typeof p_conf === 'object') {//config object
-                conf = $.extend(conf, p_conf);
+                for (var key in p_conf) {
+                    if (conf[key] !== undefined) {
+                        conf[key] = p_conf[key];
+                    }
+                }
             }
             return api;
         }
@@ -64,11 +68,13 @@ window.HTML5.Uploader = (function ($, undefined) {
             }
             //multiple files upload
             if (conf.is_multiple) {
-                $(conf.selector_input).attr('multiple', 'multiple');
+                document.getElementById(conf.input_id)
+                    .setAttribute('multiple', 'multiple');
             }
             // prepare uploading on input change
-            $(conf.selector_input).unbind().change(function (p_event) {
-                if (!$(this).val()) {// to prevent it was fired at initialize
+            document.getElementById(conf.input_id)
+                .onchange = function (p_event) {
+                if (!this.value) {// to prevent it was fired at initialize
                     return api;
                 }
                 //show the image
@@ -76,7 +82,7 @@ window.HTML5.Uploader = (function ($, undefined) {
                     && window.FileReader !== undefined) {
                     // read selected file as DataURL
                     var _reader = [];
-                    var _file = $(this)[0].files;
+                    var _file = this.files;
                     conf.has_preview();
                     for (var i = 0; i < _file.length; i++) {
                         _reader[i] = new FileReader();
@@ -87,7 +93,7 @@ window.HTML5.Uploader = (function ($, undefined) {
                         };
                     }
                 }
-            });
+            };
             return api;
         }
         /**
@@ -103,7 +109,7 @@ window.HTML5.Uploader = (function ($, undefined) {
                 alertMsg('Sorry, your browser don\'t support this function.' );
                 return api;
             }
-            var _file = $(conf.selector_input)[0].files;
+            var _file = document.getElementById(conf.input_id).files;
             _build(_file, 0, p_url, p_callback, p_param);
             return api;
         }
@@ -114,29 +120,34 @@ window.HTML5.Uploader = (function ($, undefined) {
         * @return api
         */
         function alertMsg (p_msg, p_error) {
-            var _alert = $(".alert");
+            var _alert = document.querySelector('.alert');
             if (p_msg === undefined) {
-                _alert.fadeOut(200).empty();
-                $('#html5-uploader').val('');
+                _alert.style.display = 'none';
+                _alert.innerHTML = '';
+                document.getElementById(conf.input_id).value = '';
             } else {
                 if (p_error) {
-                    _alert.addClass('alert-warning')
-                        .removeClass('alert-success');
+                    _alert.classList.add('alert-warning');
+                    _alert.classList.remove('alert-success');
                 } else {
-                    _alert.removeClass('alert-warning')
-                        .addClass('alert-success');
+                    _alert.classList.remove('alert-warning');
+                    _alert.classList.add('alert-success');
                 }
-                _alert.fadeIn(200).html(p_msg);
+                _alert.innerHTML = p_msg;
+                _alert.style.display = 'block';
             }
             return api;
         }
         function _build (p_file, p_index, p_url, p_cb, p_param) {
+            if (p_index >= p_file.length) {// end recursion
+                return;
+            }
             var _form = new FormData();
             _form.append(conf.images_name, p_file[p_index]);
             if (p_param !== undefined) {
-                $.each(p_param, function (p_k, p_v) {
-                    _form.append(p_k, p_v);
-                });
+                for (var key in p_param) {
+                    _form.append(key, p_param[key]);
+                }
             }
             if (_checkFiles(p_file[p_index])) {//passed checking
                 if (typeof p_cb === 'function') {//event handle object
@@ -171,11 +182,11 @@ window.HTML5.Uploader = (function ($, undefined) {
                 }
                 
             }, false);
-            $.each(p_func, function (p_event, p_handle) {//listener other event
-                if (p_event !== 'callback') {
-                    _xhr.upload.addEventListener(p_event, p_handle, false);
+            for (var key in p_func) {// listener other event
+                if (key !== 'callback') {
+                    _xhr.upload.addEventListener(key, p_func[key], false);
                 }
-            });
+            }
             _xhr.open('POST', p_url);
             _xhr.send(p_form);
             _xhr.onreadystatechange = function() {//callback
@@ -204,14 +215,24 @@ window.HTML5.Uploader = (function ($, undefined) {
         }
         // setting progress bar width and display
         function _setProgress (p_width) {
-            var _bar = $('#html5-uploader-progress');
-            var _container = _bar.closest('.progress');
+            var _bar = document.getElementById('html5-uploader-progress');
+            var _container = _closest(_bar, 'progress');
             if (p_width < 0 || typeof p_width !== 'number') {
-                _bar.width(0);
-                _container.hide();
+                _bar.style.width = 0;
+                _container.style.display = 'none';
             } else {
-                _bar.width(p_width + '%');
-                _container.show();
+                _bar.style.width = p_width + '%';
+                _container.style.display = 'block';
+            }
+            function _closest (p_el, p_target) {
+                var _parent = p_el.parentElement;
+                if (_parent.className === p_target) {
+                    return _parent;
+                } else if (_parent.tagName === 'body') {
+                    return false;
+                } else {
+                    return _closest(_parent, p_target);
+                }
             }
         }
         // setting preview images
@@ -224,4 +245,4 @@ window.HTML5.Uploader = (function ($, undefined) {
         }
         return api;
     };
-})(jQuery);
+})(window);
