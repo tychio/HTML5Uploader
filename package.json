@@ -5,6 +5,6 @@
         "grunt": "*",
         "grunt-contrib-watch": "*",
         "grunt-contrib-uglify": "*",
-        "grunt-jslint": "*"
+        "grunt-contrib-jshint": "*"
     }
 }

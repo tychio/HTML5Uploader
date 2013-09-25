@@ -1,6 +1,12 @@
 module.exports = function (grunt) {
 'use strict';
     grunt.initConfig({
+        watch: {
+            scripts: {
+                files: ['uploader.js'],
+                tasks: ['uglify']
+            }
+        },
         uglify: {
             options: {
                 banner: '\/\/By Tychio\[code\@tychio\.net\]\n'
@@ -11,41 +17,17 @@ module.exports = function (grunt) {
                 }
             }
         },
-        watch: {
-            scripts: {
-                files: ['uploader.js'],
-                tasks: ['uglify']
-            }
-        },
-        jslint: {
+        jshint: {
             files: [
-                '*.js'
-            ],
-            exclude: [
-                '*.js'
-            ],
-            directives: {
-                browser: true,
-                unparam: true,
-                todo: true
-            },
-            options: {
-                junit: 'out/junit.xml',
-                log: 'out/lint.log',
-                jslintXml: 'out/jslint_xml.xml',
-                errorsOnly: true
-                ,
-                failOnError: false,
-                shebang: true,
-                checkstyle: 'out/checkstyle.xml'
-            }
+                'uploader.js'
+            ]
         }
     });
 
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-contrib-uglify');
-    grunt.loadNpmTasks('grunt-jslint');
+    grunt.loadNpmTasks('grunt-contrib-jshint');
 
     grunt.registerTask('default', ['uglify', 'watch']);
-    grunt.registerTask('hint', ['jslint']);
+    grunt.registerTask('hint', ['jshint']);
 }
