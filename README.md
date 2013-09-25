@@ -1,7 +1,7 @@
 Image Uploader based on HTML5
 ---
 
-It's a images uploader that support multiple upload, preview image and progress bar.Temporarily it must still depend on jQuery.
+It's a images uploader that support multiple upload, preview image and progress bar.
 
 Use
 ---
@@ -10,11 +10,11 @@ The API is very simple and Only a few.You need `init` to build the uploader and 
 
     var uploader = window.HTML5.Uploader();
     uploader.init();
-    $('#submit').click(function () {
+    document.getElementById('submit').onclick = function () {
         uploader.upload('uploader.php', function () {
             // ur code...
         });
-    });
+    };
 
 All right,I suggest that `set` is necessary.Because I think the default options aren't to your taste.
 
@@ -26,7 +26,7 @@ All right,I suggest that `set` is necessary.Because I think the default options 
         error_size:             'File Size too large!',
         error_compute:          'Unable to compute',
         loading:                'waiting for upload is complete...',
-        selector_input:         '#html5-uploader',//input[type=file] selector
+        input_id:               'html5-uploader',//input[type=file] selector
         is_multiple:            false,//allow to upload multiple files
         has_preview:            _setPreview,//preview image,need function
         has_progress:           _setProgress//progress bar，need function
@@ -38,10 +38,13 @@ Furthermore,There is two attributes are type of function for progress and previe
 
     uploader.set({
         has_preview: function (p_target) {
+            var _preview = document.getElementById('preview');
             if (typeof p_target === 'undefined') {
-                $('#preview').attr('src', '').hide();
+                _preview.setAttribute('src', '');
+                _preview.style.display = 'none';
             } else {
-                $('#preview').attr('src', p_target.result).show();
+                _preview.setAttribute('src', p_target.result);
+                _preview.style.display = 'block';
             }
         }
     });
