@@ -45,54 +45,71 @@
             <section id="upload_preview"></section>
         </fieldset>
     </form>
-    <script type="text/javascript" src="jquery.min.js"></script>
     <script type="text/javascript" src="uploader.js"></script>
     <script type="text/javascript">
-        var up = window.HTML5.Uploader();
-        up.set({
-            is_multiple: true,
-            has_progress: function (p_height, p_index) {
-                var _proCls = 'upload_progress';
-                if (p_height < 0) {
-                    $('.' + _proCls).detach();
-                } else {
-                    var _preview = $('#preview_' + p_index);
-                    var _progress = _preview.find('.' + _proCls);
-                    _progress.height(p_height*2);
-                    if (p_height > 100) {
-                        _progress.html('completed');
+        window.onload = function () {
+            var up = window.HTML5.Uploader();
+            up.set({
+                is_multiple: true,
+                has_progress: function (p_height, p_index) {
+                    var _previewEl = document.getElementById('preview_' + p_index);
+                    var _PRO_CLS = 'upload_progress';
+                    if (_previewEl) {
+                        var _previewChild = _previewEl.children;
+                        if (_previewChild) {
+                            var _progressEl;
+                            for (var i in _previewChild) {
+                                if (_previewChild[i].className === _PRO_CLS) {
+                                    _progressEl = _previewChild[i];
+                                }
+                            }
+                            if (p_height < 0) {
+                                _progressEl.parentElement.removeChild(_progressEl);
+                            } else if (p_height < 100) {
+                                _progressEl.style.height = p_height*2 + 'px';
+                                _progressEl.innerHTML = p_height + '%';
+                            } else {
+                                _progressEl.style.height = '200px';
+                                _progressEl.innerHTML = 'completed';
+                            }
+                        }
+                    }
+                },
+                has_preview: function (p_target, p_index) {
+                    var _previewEl = document.getElementById('upload_preview');
+                    if (typeof p_target === 'undefined') {
+                        if (_previewEl) {
+                            _previewEl.innerHTML = '';
+                        }
                     } else {
-                        _progress.html(p_height + '%');
+                        var _imgEl = document.createElement('img');
+                        _imgEl.setAttribute('src', p_target.result);
+                        var _proEl = document.createElement('div');
+                        _proEl.className = 'upload_progress';
+                        var _wrapEl = document.createElement('div');
+                        _wrapEl.className = 'upload_wrap';
+                        _wrapEl.id = 'preview_' + p_index;
+                        _wrapEl.style.display = 'none';
+                        _wrapEl.style.opacity = 0;
+                        _wrapEl.innerHTML = '';
+                        _wrapEl.appendChild(_imgEl);
+                        _wrapEl.appendChild(_proEl);
+                        _previewEl.appendChild(_wrapEl);
+                        _wrapEl.style.display = 'block';
+                        _wrapEl.style.opacity = 1;
                     }
                 }
-            },
-            has_preview: function (p_target, p_index) {
-                var _preview = $('#upload_preview');
-                if (typeof p_target === 'undefined') {
-                    _preview.empty();
-                } else {
-                    var _img = $('<img>').attr({
-                        'src': p_target.result
-                    });
-                    var _wrap = $('<div>').attr({
-                        'class': 'upload_wrap',
-                        'id': 'preview_' + p_index
-                    }).hide().html(_img).append($('<div>', {
-                        class: 'upload_progress'
-                    }));
-                    _preview.append(_wrap);
-                    _wrap.fadeIn(500);
-                }
-            }
-        }).init();
-        $('#upload_submit').click(function (p_event) {
-            p_event.preventDefault();
-            event.returnValue = false;
-            up.upload('uploader.php', function (p_data) {
+            }).init();
+            var submitEl = document.getElementById('upload_submit');
+            submitEl.onclick = function (p_event) {
+                p_event.preventDefault();
+                event.returnValue = false;
+                up.upload('uploader.php', function (p_data) {
 
-            });
-            return false;
-        });
+                });
+                return false;
+            };
+        }
     </script>
 </body>
 </html>
