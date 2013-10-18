@@ -1,6 +1,6 @@
 <?php
     header('Content-type: text/json');
-    // print_r($_FILES["upload"]);
+    print_r($_FILES["upload"]["name"]);
     $rtn = array(
         "code" => 0,
         "data" => ''

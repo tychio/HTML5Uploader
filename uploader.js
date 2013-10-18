@@ -5,7 +5,7 @@
  * UPDATE: 2013/08/22
  * SUPPORT: IE10+/Chrome7+/Firefox4+/Opera12+/Safari6+
  **/
-;window.HTML5 = window.HTML5 || {};
+window.HTML5 = window.HTML5 || {};
 window.HTML5.Uploader = (function (win, undefined) {
     "use strict";
     return function () {
@@ -29,7 +29,8 @@ window.HTML5.Uploader = (function (win, undefined) {
             init: initializeUploader,
             upload: uploadImages,
             tip: alertMsg
-        };
+        },
+        index = {};// images loading sequence
         /**
          * setting configuration data.
          * @param p_conf [number/string/object]configuration data.
@@ -78,8 +79,7 @@ window.HTML5.Uploader = (function (win, undefined) {
                     return api;
                 }
                 //show the image
-                if (_isFunction(conf.has_preview) 
-                    && window.FileReader !== undefined) {
+                if (_isFunction(conf.has_preview) && window.FileReader) {
                     // read selected file as DataURL
                     var _reader = [];
                     var _file = this.files;
@@ -87,13 +87,15 @@ window.HTML5.Uploader = (function (win, undefined) {
                     for (var i = 0; i < _file.length; i++) {
                         _reader[i] = new FileReader();
                         _reader[i].readAsDataURL(_file[i]);
-                        _reader[i].index = i;
-                        _reader[i].onload = function (_p_e) {//loaded file
-                            conf.has_preview(_p_e.target, this.index);
-                        };
+                        _reader[i].onload = _load(i);
                     }
                 }
             };
+            function _load (_p_i) {//loaded file
+                return function (_p_e) {
+                    conf.has_preview(_p_e.target, _p_i);
+                };
+            }
             return api;
         }
         /**
@@ -155,7 +157,7 @@ window.HTML5.Uploader = (function (win, undefined) {
                         callback: p_cb
                     };
                 }
-                p_cb['loadend'] = function () {
+                p_cb.loadend = function () {
                     conf.has_progress(101, p_index);
                     _build(p_file, p_index + 1, p_url, p_cb, p_param);
                 };
