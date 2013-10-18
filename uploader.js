@@ -21,6 +21,7 @@ window.HTML5.Uploader = (function (win, undefined) {
             loading:                'waiting for upload is complete...',
             input_id:               'html5-uploader',//input[type=file] selector
             is_multiple:            false,//allow to upload multiple files
+            is_cross:               false,//allow to cross domain
             has_preview:            _setPreview,//preview image,need function
             has_progress:           _setProgress//progress bar，need function
         },
@@ -189,6 +190,7 @@ window.HTML5.Uploader = (function (win, undefined) {
                     _xhr.upload.addEventListener(key, p_func[key], false);
                 }
             }
+            _xhr.withCredentials = !!conf.is_cross;
             _xhr.open('POST', p_url);
             _xhr.send(p_form);
             _xhr.onreadystatechange = function() {//callback
