@@ -51,6 +51,7 @@
             var up = window.HTML5.Uploader();
             up.set({
                 is_multiple: true,
+                is_cross: true,
                 has_progress: function (p_height, p_index) {
                     var _previewEl = document.getElementById('preview_' + p_index);
                     var _PRO_CLS = 'upload_progress';
@@ -103,8 +104,7 @@
             var submitEl = document.getElementById('upload_submit');
             submitEl.onclick = function (p_event) {
                 p_event.preventDefault();
-                event.returnValue = false;
-                up.upload('uploader.php', function (p_data) {
+                up.upload('http://127.0.0.1/test/uploader/uploader.php', function (p_data) {
 
                 });
                 return false;
